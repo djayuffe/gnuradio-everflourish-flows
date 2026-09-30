@@ -1,28 +1,21 @@
 # Technical Audit
 
-This audit summarizes code, functions, and feature coverage for `gnuradio-everflourish-flows`.
+This audit covers the modern-only public repository `gnuradio-everflourish-flows`.
 
 ## Scope
 
-- Flowgraphs audited: 3 modern files plus archived originals in `flows/`.
-- Tools audited: `tools/audit_flows.py` and `tools/validate_grc.py`.
-- Reports regenerated locally before publication.
+- Modern flowgraphs audited: 3.
+- Outdated public XML removed from the repo.
+- Repo-local file paths used for samples/captures.
+- GNU Radio Companion validation target: 3.8.5.0.
 
-## Code and Function Review
+## Tooling Review
 
-- `tools/audit_flows.py` parses XML with `xml.etree.ElementTree`, hashes each file, lists block counts, connection counts, hardware endpoints, transmit-capable sinks, explicit file paths, duplicate block IDs, and exact duplicate payloads.
-- `tools/validate_grc.py` uses the installed GNU Radio Companion core API, not text matching, to load, rewrite, and validate each modern `.grc` file.
-- Shell examples avoid executing generated RF graphs automatically; generation and validation are separate from runtime operation.
+- `tools/audit_flows.py` parses GRC XML, hashes each file, reports block/connection counts, hardware endpoints, transmit-capable sinks, file paths, duplicate IDs, and exact duplicate payloads.
+- `tools/validate_grc.py` uses GNU Radio Companion's Python API to load, rewrite, and validate each modern `.grc`; it does not rely on ad hoc text matching.
+- Setup scripts, where present, create safe placeholder local files only. They do not run SDR hardware.
 
-## Feature Coverage
-
-- 433.92 MHz receive/analysis chains
-- UHD and osmocom SDR input variants
-- Magnitude-squared analysis and threshold visualization paths
-- Audio monitoring path
-- File capture/replay path preserved from the original work
-
-## Technical Parameters
+## Feature and Parameter Coverage
 
 | Flowgraph | Blocks | Connections | Key Parameters | Hardware/Audio Blocks | Transmit Blocks |
 | --- | ---: | ---: | --- | --- | --- |
@@ -30,13 +23,20 @@ This audit summarizes code, functions, and feature coverage for `gnuradio-everfl
 | `EverFlourish.grc.1` | 28 | 18 | usrp_samp_rate=5e6; samp_rate=usrp_samp_rate/decimation; rx_gain=15; freq=433.92e6 | uhd_usrp_source_0 (uhd_usrp_source); audio_sink_0 (audio_sink) | - |
 | `EverFlourish_uber.grc` | 28 | 18 | usrp_samp_rate=5e6; samp_rate=usrp_samp_rate/decimation; rx_gain=15; freq=433.92e6 | audio_sink_0 (audio_sink); osmosdr_source_0 (osmosdr_source) | - |
 
-## Known Operational Gaps
+## File Path Coverage
 
-- Runtime hardware behavior is not asserted by validation; actual SDR/audio devices must be configured locally.
-- External sample/capture files named in legacy graphs are not bundled unless present in `flows/`.
-- Transmit-capable graphs require separate RF lab controls and legal authorization.
+- `EverFlourish.grc`: blocks_file_sink_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_source_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_sink_1.file=captures/everflourish_magsquared.float32
+- `EverFlourish.grc.1`: blocks_file_sink_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_source_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_sink_1.file=captures/everflourish_magsquared.float32
+- `EverFlourish_uber.grc`: blocks_file_sink_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_source_0.file=captures/everflourish_remote_control_recording.cfile; blocks_file_sink_1.file=captures/everflourish_magsquared.float32
 
-## Verification
+## Remaining Runtime Responsibilities
 
-- `VALIDATION.md` has no `Result: FAILED` entries.
+- GRC validation and `grcc` generation do not prove connected SDR/audio hardware behavior.
+- Users must configure local devices, antennas, sample files, and gains.
+- Transmit-capable graphs require RF isolation and authorization before any runtime use.
+
+## Verification Checklist
+
+- `VALIDATION.md` contains no `Result: FAILED` entries.
 - `SHA256SUMS.txt` verifies all committed files.
+- Generated Python and runtime captures remain ignored by git.
